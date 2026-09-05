@@ -2,7 +2,7 @@
 ### Track 01: AI Growth & Agentic Commerce | Razorpay AI Buildathon 2026
 
 [![Buildathon Track](https://img.shields.io/badge/Razorpay%20AI%20Buildathon-Track%2001%3A%20AI%20Growth%20%26%20Agentic%20Commerce-blue?style=for-the-badge&logo=razorpay)](https://razorpay.com)
-[![Safety Status](https://img.shields.io/badge/Money--Action%20Safety-Hardened%20Server%20Invariants-emerald?style=for-the-badge&logo=shield)](file:///d:/Razor/implementation_audit_report.md)
+[![Safety Status](https://img.shields.io/badge/Money--Action%20Safety-Hardened%20Server%20Invariants-emerald?style=for-the-badge&logo=shield)](#-hardened-money-action-guardrails-judging-bar)
 [![Agent Protocol](https://img.shields.io/badge/Agent--to--Agent%20API-Transactable%20End--to--End-purple?style=for-the-badge&logo=fastapi)](file:///d:/Razor/backend/src/routes/agentApiRoutes.js)
 [![License](https://img.shields.io/badge/License-MIT-amber?style=for-the-badge)](LICENSE)
 
@@ -178,13 +178,11 @@ During architectural hardening, **7 critical edge cases** were permanently imple
 
 ```
 d:/Razor/
-├── .env.example                          # Environment variable template
 ├── .gitignore                            # Comprehensive ignore file (secrets, node_modules)
 ├── package.json                          # Root runner (concurrently launches backend & frontend)
 ├── README.md                             # Comprehensive project documentation
-├── implementation_audit_report.md        # Deep-dive hardening & edge-case test report
-├── razorpay-track01-build-prompt-final.md # Buildathon track specification
 ├── backend/
+│   ├── .env.example                      # Environment variable template
 │   ├── package.json
 │   └── src/
 │       ├── app.js                        # Express middleware & route mounting
@@ -394,9 +392,9 @@ cd ..
 ```
 
 ### 3. Configure Environment Variables
-Create a `.env` file inside the `backend/` directory (refer to `.env.example`):
+Create a `.env` file inside the `backend/` directory (refer to `backend/.env.example`):
 ```bash
-cp .env.example backend/.env
+cp backend/.env.example backend/.env
 ```
 
 Edit `backend/.env`:
