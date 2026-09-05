@@ -42,6 +42,7 @@ export function createAgentQuote(req, res) {
       requirements,
       recommendation: recommendationData.primaryRecommendation,
       recommendationReason: recommendationData.recommendationReason,
+      tradeoffComparison: recommendationData.tradeoffComparison || null,
       boundedUpsell: recommendationData.boundedUpsell,
       crossSells: recommendationData.crossSells,
       totalQuotedAmount: recommendationData.primaryRecommendation ? Math.round(recommendationData.primaryRecommendation.price * 1.18) : 0
@@ -57,6 +58,9 @@ export function createAgentQuote(req, res) {
         quoteId,
         requirements,
         recommendationId: recommendationData.primaryRecommendation?.id,
+        hasCloseContender: !!recommendationData.tradeoffComparison,
+        contenderProductId: recommendationData.tradeoffComparison?.contenderProduct?.id || null,
+        tradeoffSummary: recommendationData.tradeoffComparison?.tradeoffSummary || null,
         boundedUpsellId: recommendationData.boundedUpsell?.product?.id
       },
       source: "agent-api"
@@ -75,7 +79,7 @@ export function createAgentQuote(req, res) {
 // POST /api/orders/confirm -> Programmatic AI Buyer Agent Order Confirmation
 export async function confirmAgentOrder(req, res) {
   try {
-    const { quote_id, accept = true, include_upsell = false, include_cross_sells = [] } = req.body;
+    const { quote_id, accept = true, include_upsell = false, include_cross_sells = [], select_contender = false } = req.body;
 
     if (!quote_id || !quotesCache.has(quote_id)) {
       return res.status(404).json({ success: false, error: "Quote ID not found or expired" });
@@ -107,11 +111,32 @@ export async function confirmAgentOrder(req, res) {
       setCartBudgetCeiling(sessionId, quote.requirements.budget_ceiling);
     }
 
-    // Add primary recommendation
-    if (quote.recommendation) {
-      addToCart(sessionId, quote.recommendation, 1, {
+    // Determine whether to add default primary recommendation or contender product
+    let selectedMainProduct = quote.recommendation;
+    let selectedReason = quote.recommendationReason;
+
+    if (select_contender && quote.tradeoffComparison?.contenderProduct) {
+      selectedMainProduct = quote.tradeoffComparison.contenderProduct;
+      selectedReason = `AI Buyer chose contender based on trade-off: ${quote.tradeoffComparison.tradeoffSummary}`;
+
+      addAuditLog({
+        sessionId,
+        event: "AGENT_SELECTED_CONTENDER_TRADEOFF",
+        payload: {
+          quoteId: quote.quoteId,
+          primaryProductId: quote.recommendation?.id,
+          contenderProductId: selectedMainProduct.id,
+          tradeoffSummary: quote.tradeoffComparison.tradeoffSummary
+        },
+        source: "agent-api"
+      });
+    }
+
+    // Add main chosen product
+    if (selectedMainProduct) {
+      addToCart(sessionId, selectedMainProduct, 1, {
         isUpsell: false,
-        addedReason: quote.recommendationReason
+        addedReason: selectedReason
       });
     }
 

@@ -4,6 +4,7 @@ import RequirementsPanel from './RequirementsPanel';
 import ProductCard from './ProductCard';
 import UpsellCard from './UpsellCard';
 import CrossSellCard from './CrossSellCard';
+import TradeoffComparisonCard from './TradeoffComparisonCard';
 
 const SAMPLE_PROMPTS = [
   "Wireless headphones under ₹15,000, must have active noise cancellation.",
@@ -12,7 +13,15 @@ const SAMPLE_PROMPTS = [
   "Find a smart desk lamp under ₹3,000 with wireless phone charging"
 ];
 
-export default function ChatInterface({ onSendMessage, isProcessing, agentResponse, onAddToCart, onApproveUpsell }) {
+export default function ChatInterface({
+  onSendMessage,
+  isProcessing,
+  agentResponse,
+  onAddToCart,
+  onApproveUpsell,
+  onSwapToContender,
+  isContenderActive
+}) {
   const [inputText, setInputText] = useState('');
   const [showAlternatives, setShowAlternatives] = useState(true);
 
@@ -121,6 +130,16 @@ export default function ChatInterface({ onSendMessage, isProcessing, agentRespon
           {/* Extracted Requirements Panel */}
           {agentResponse.requirements && (
             <RequirementsPanel requirements={agentResponse.requirements} />
+          )}
+
+          {/* Close Candidate Trade-Off Comparison Card */}
+          {agentResponse.tradeoffComparison && (
+            <TradeoffComparisonCard
+              tradeoffComparison={agentResponse.tradeoffComparison}
+              onAddToCart={onAddToCart}
+              onSwapToContender={onSwapToContender}
+              isContenderActive={isContenderActive}
+            />
           )}
 
           {/* Primary BEST FIT AI Recommendation */}

@@ -46,6 +46,7 @@ export default function App() {
     pendingAction: null
   });
   const [isProcessingOverride, setIsProcessingOverride] = useState(false);
+  const [isContenderActive, setIsContenderActive] = useState(false);
 
   const [notification, setNotification] = useState(null);
 
@@ -90,6 +91,7 @@ export default function App() {
   // Handler: Natural language prompt submit
   const handleSendMessage = async (userText) => {
     setIsProcessing(true);
+    setIsContenderActive(false);
     try {
       const res = await sendAgentMessage(sessionId, userText);
       if (res.success) {
@@ -187,6 +189,50 @@ export default function App() {
         setCart(res.cart);
         setIsCartOpen(true);
         showNotification(`Explicitly approved stretch option: ${product.name}`);
+      } else {
+        showNotification(res.error, "error");
+      }
+    } catch (err) {
+      showNotification(err.message, "error");
+    }
+  };
+
+  // Handler: Immediate Swap to Contender from Trade-off Card
+  const handleSwapToContender = async (contenderProduct, primaryProduct) => {
+    try {
+      // If primary is in cart, remove it
+      const currentItems = cart.items || [];
+      const primaryInCart = currentItems.find(i => i.productId === primaryProduct.id);
+      if (primaryInCart) {
+        await removeFromCartApi(sessionId, primaryProduct.id);
+      }
+
+      // Add contender product
+      const res = await addToCartApi({
+        sessionId,
+        productId: contenderProduct.id,
+        quantity: 1,
+        isUpsell: false,
+        userBudgetCeiling: agentResponse?.requirements?.budget_ceiling,
+        addedReason: `Swapped to close contender: ${agentResponse?.tradeoffComparison?.tradeoffSummary || contenderProduct.name}`
+      });
+
+      if (res.hardReject) {
+        showNotification(res.error, "error");
+        promptBudgetOverride(res.details, null);
+        return;
+      }
+
+      if (res.requiresOverride) {
+        promptBudgetOverride(res.details, () => handleSwapToContender(contenderProduct, primaryProduct));
+        return;
+      }
+
+      if (res.success) {
+        setCart(res.cart);
+        setIsCartOpen(true);
+        setIsContenderActive(true);
+        showNotification(`Swapped recommendation to ${contenderProduct.name}! ⚖️`);
       } else {
         showNotification(res.error, "error");
       }
@@ -415,6 +461,8 @@ export default function App() {
             agentResponse={agentResponse}
             onAddToCart={handleAddToCart}
             onApproveUpsell={handleApproveUpsell}
+            onSwapToContender={handleSwapToContender}
+            isContenderActive={isContenderActive}
           />
         )}
 

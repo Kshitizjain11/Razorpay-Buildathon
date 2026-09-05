@@ -321,6 +321,9 @@ export async function processUserMessage(sessionId, userMessage, source = "human
       primaryProductId: recommendationData.primaryRecommendation?.id,
       primaryProductName: recommendationData.primaryRecommendation?.name,
       reason: recommendationData.recommendationReason,
+      hasCloseContender: !!recommendationData.tradeoffComparison,
+      contenderProductId: recommendationData.tradeoffComparison?.contenderProduct?.id || null,
+      tradeoffSummary: recommendationData.tradeoffComparison?.tradeoffSummary || null,
       upsellOffered: recommendationData.boundedUpsell ? {
         productId: recommendationData.boundedUpsell.product.id,
         priceAboveBudget: recommendationData.boundedUpsell.priceAboveBudget,
@@ -339,6 +342,7 @@ export async function processUserMessage(sessionId, userMessage, source = "human
     recommendation: recommendationData.primaryRecommendation,
     reasoning: recommendationData.recommendationReason,
     conversationalExplanation: recommendationData.conversationalExplanation,
+    tradeoffComparison: recommendationData.tradeoffComparison || null,
     boundedUpsell: recommendationData.boundedUpsell,
     crossSells: recommendationData.crossSells,
     alternatives: recommendationData.alternativeOptions,
